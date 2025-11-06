@@ -1,11 +1,6 @@
 ARG PHP_VERSION=8.3
-ARG NODE_MAJOR=20
 
-# Base PHP image (Debian Bookworm for cross-arch stability)
 FROM php:${PHP_VERSION}-bookworm
-
-ARG PHP_VERSION
-ARG NODE_MAJOR
 
 LABEL maintainer="Martijn Swinkels"
 LABEL description="Reusable CI runner image for PHP + Node projects"
@@ -19,17 +14,33 @@ RUN set -eux; \
     rm -rf /var/lib/apt/lists/*
 
 # Node.js
+ARG NODE_MAJOR=20
 RUN set -eux; \
-    mkdir -p /etc/apt/keyrings; \
-    curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key \
-        | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg; \
-    echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] \
-        https://deb.nodesource.com/node_${NODE_MAJOR}.x nodistro main" \
-        > /etc/apt/sources.list.d/nodesource.list; \
-    apt-get update; \
-    apt-get install -y nodejs; \
+    apt-get update && apt-get install -y xz-utils ca-certificates curl; \
+    ARCH=$(uname -m); \
+    case "$ARCH" in \
+      x86_64) ARCH_NAME="x64" ;; \
+      aarch64) ARCH_NAME="arm64" ;; \
+      *) echo "Unsupported arch: $ARCH" && exit 1 ;; \
+    esac; \
+    if [ "$NODE_MAJOR" = "14" ]; then \
+        echo "⚙️ Installing Node.js v14 ($ARCH_NAME) from tarball"; \
+        curl -fsSL "https://nodejs.org/dist/latest-v14.x/node-v14.21.3-linux-${ARCH_NAME}.tar.xz" -o /tmp/node.tar.xz; \
+        tar -xJf /tmp/node.tar.xz -C /usr/local --strip-components=1 --no-same-owner; \
+        rm /tmp/node.tar.xz; \
+    else \
+        echo "⚙️ Installing Node.js v$NODE_MAJOR from NodeSource"; \
+        mkdir -p /etc/apt/keyrings; \
+        curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key \
+          | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg; \
+        echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] \
+          https://deb.nodesource.com/node_${NODE_MAJOR}.x nodistro main" \
+          > /etc/apt/sources.list.d/nodesource.list; \
+        apt-get update && apt-get install -y nodejs; \
+    fi; \
     node --version && npm --version; \
     rm -rf /var/lib/apt/lists/*
+
 
 # Composer & Deployer
 COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
