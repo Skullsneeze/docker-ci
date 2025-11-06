@@ -44,7 +44,6 @@ jobs:
           docker build \
             --build-arg PHP_VERSION=$PHP \
             --build-arg NODE_MAJOR=$NODE \
-            -f docker/php-node.Dockerfile \
             -t $REGISTRY/${IMAGE_NAME}:php${PHP}-node${NODE} .
 
           # Push
