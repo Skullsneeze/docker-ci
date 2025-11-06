@@ -7,7 +7,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: wearejust/docker-ci
+  IMAGE_NAME: skullsneeze/docker-ci
 
 jobs:
   build:

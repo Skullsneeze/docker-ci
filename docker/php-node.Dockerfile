@@ -2,7 +2,7 @@ ARG PHP_VERSION=8.3
 ARG NODE_MAJOR=20
 FROM php:${PHP_VERSION}-cli-bookworm
 
-LABEL maintainer="JUST B.V."
+LABEL maintainer="Martijn Swinkels"
 LABEL description="Reusable CI runner image for PHP + Node projects"
 
 RUN apt-get update && apt-get install -y \
