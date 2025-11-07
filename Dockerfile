@@ -10,7 +10,7 @@ RUN set -eux; \
     apt-get update && apt-get install -y \
       git unzip zip curl make gnupg lftp pkg-config openssh-client \
       libicu-dev libpq-dev libxml2-dev libpng-dev libjpeg-dev libfreetype6-dev \
-      libzip-dev libcurl4-openssl-dev libonig-dev libxslt-dev \
+      libzip-dev libcurl4-openssl-dev libonig-dev libxslt-dev rsync \
   && rm -rf /var/lib/apt/lists/*
 
 # Node.js
