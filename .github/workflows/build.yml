@@ -56,8 +56,6 @@ jobs:
             PHP_VERSION=${{ matrix.php }}
             NODE_MAJOR=${{ matrix.node }}
           platforms: ${{ steps.meta.outputs.platforms }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
 
   tag_latest:
     if: startsWith(github.ref, 'refs/tags/v')
