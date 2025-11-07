@@ -7,11 +7,11 @@ LABEL description="Reusable CI runner image for PHP + Node projects"
 
 # System dependencies
 RUN set -eux; \
-    apt-get update; \
-    apt-get install -y --no-install-recommends \
-        git curl unzip make lftp gnupg ca-certificates \
-        build-essential pkg-config; \
-    rm -rf /var/lib/apt/lists/*
+    apt-get update && apt-get install -y \
+      git unzip zip curl make gnupg lftp pkg-config openssh-client \
+      libicu-dev libpq-dev libxml2-dev libpng-dev libjpeg-dev libfreetype6-dev \
+      libzip-dev libcurl4-openssl-dev libonig-dev libxslt-dev \
+  && rm -rf /var/lib/apt/lists/*
 
 # Node.js
 ARG NODE_MAJOR=20
@@ -24,12 +24,12 @@ RUN set -eux; \
       *) echo "Unsupported arch: $ARCH" && exit 1 ;; \
     esac; \
     if [ "$NODE_MAJOR" = "14" ]; then \
-        echo "⚙️ Installing Node.js v14 ($ARCH_NAME) from tarball"; \
+        echo "Installing Node.js v14 ($ARCH_NAME) from tarball"; \
         curl -fsSL "https://nodejs.org/dist/latest-v14.x/node-v14.21.3-linux-${ARCH_NAME}.tar.xz" -o /tmp/node.tar.xz; \
         tar -xJf /tmp/node.tar.xz -C /usr/local --strip-components=1 --no-same-owner; \
         rm /tmp/node.tar.xz; \
     else \
-        echo "⚙️ Installing Node.js v$NODE_MAJOR from NodeSource"; \
+        echo "Installing Node.js v$NODE_MAJOR from NodeSource"; \
         mkdir -p /etc/apt/keyrings; \
         curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key \
           | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg; \

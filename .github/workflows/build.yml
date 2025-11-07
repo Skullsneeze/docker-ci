@@ -2,6 +2,8 @@ name: Build & publish PHP + Node Docker images
 
 on:
   push:
+    branches:
+      - main
     tags:
       - 'v*'
 
@@ -32,24 +34,22 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push image variants
-        run: |
-          VERSION_TAG=${GITHUB_REF_NAME}
-          PHP=${{ matrix.php }}
-          NODE=${{ matrix.node }}
-
-          echo "Building PHP $PHP / Node $NODE for $VERSION_TAG"
-
-          # Build
-          docker build \
-            --build-arg PHP_VERSION=$PHP \
-            --build-arg NODE_MAJOR=$NODE \
-            -t $REGISTRY/${IMAGE_NAME}:php${PHP}-node${NODE} .
-
-          # Push
-          docker push $REGISTRY/${IMAGE_NAME}:php${PHP}-node${NODE}
+      - name: Build and push images
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:php${{ matrix.php }}-node${{ matrix.node }}${{ github.ref_type == 'branch' && '-edge' || '' }}
+          build-args: |
+            PHP_VERSION=${{ matrix.php }}
+            NODE_MAJOR=${{ matrix.node }}
+          platforms: linux/amd64,linux/arm64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
   tag_latest:
+    if: startsWith(github.ref, 'refs/tags/v')
     needs: build
     runs-on: ubuntu-latest
     permissions:
@@ -69,7 +69,6 @@ jobs:
           DEFAULT_TAG=php8.3-node20
           VERSION_TAG=${GITHUB_REF_NAME}
           echo "Tagging $DEFAULT_TAG as latest and $VERSION_TAG"
-
           docker pull $REGISTRY/${IMAGE_NAME}:$DEFAULT_TAG
           docker tag $REGISTRY/${IMAGE_NAME}:$DEFAULT_TAG $REGISTRY/${IMAGE_NAME}:latest
           docker tag $REGISTRY/${IMAGE_NAME}:$DEFAULT_TAG $REGISTRY/${IMAGE_NAME}:$VERSION_TAG
